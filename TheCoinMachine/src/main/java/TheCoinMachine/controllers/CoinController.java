@@ -3,45 +3,38 @@ package TheCoinMachine.controllers;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import java.util.List;
-import java.util.Map;
+import TheCoinMachine.domain.Transaction;
+import TheCoinMachine.domain.Result;
 
 @RestController
 public class CoinController {
 
 	@PostMapping("/coins")
-	public Map<String, Integer> calculateCoins(@RequestBody Map<String, List<String>> actions) {
-	    int rightPerson = 3;
-	    int leftPerson = 3;
-
-	    List<String> rightActions = actions.get("rightPerson");
-	    List<String> leftActions = actions.get("leftPerson");
-
-	    for (int i = 0; i < rightActions.size(); i++) {
-	        String rightAction = rightActions.get(i);
-	        String leftAction = leftActions.get(i);
-
-	        if ("P".equals(rightAction) && "R".equals(leftAction)) {
-	            rightPerson--;
-	            leftPerson += 3;
-	        }
+	public Result calculateCoins(@RequestBody Transaction transaction) {
+	    int rightPersonInitial = 3;
+	    int leftPersonInitial = 3;
 	    
-	        else if ("R".equals(rightAction) && "P".equals(leftAction)) {
-	            rightPerson += 3;
-	            leftPerson--;
+	    for (int i = 0; i < transaction.getRightPerson().size(); i++) {
+	        String moveRight = transaction.getRightPerson().get(i);
+	        String moveLeft = transaction.getLeftPerson().get(i);
+
+	        if ("P".equals(moveRight) && "P".equals(moveLeft)) {
+	            rightPersonInitial += 2;
+	            leftPersonInitial += 2;
+	            
+	        } else if ("P".equals(moveRight) && "R".equals(moveLeft)) {
+	        	rightPersonInitial--;
+	        	leftPersonInitial += 3;
+	        	
+	        } else if ("R".equals(moveRight) && "P".equals(moveLeft)) {
+	            rightPersonInitial += 3;
+	            leftPersonInitial--;
+	            
+	        } else if ("R".equals(moveRight) && "R".equals(moveLeft)) {
+	            continue;
 	        }
-	        
-	        else if ("P".equals(rightAction) && "P".equals(leftAction)) {
-	            rightPerson -= 1;
-	            leftPerson -= 1;
-	            rightPerson += 3;
-	            leftPerson += 3;
-	        }
-	        // TODO: people didn't set to both receive
-	        
-	        // transaction, result classes
 	    }
 
-	    return Map.of("rightPerson", rightPerson, "leftPerson", leftPerson);
+	    return new Result(rightPersonInitial, leftPersonInitial);
 	}
 }

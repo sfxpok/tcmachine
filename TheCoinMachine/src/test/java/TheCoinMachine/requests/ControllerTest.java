@@ -1,102 +1,108 @@
 package TheCoinMachine.requests;
 
-import com.hackerrank.test.utility.Order;
-import com.hackerrank.test.utility.OrderedTestRunner;
-import com.hackerrank.test.utility.TestWatchman;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestWatcher;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.rules.SpringClassRule;
-import org.springframework.test.context.junit4.rules.SpringMethodRule;
+import TheCoinMachine.controllers.CoinController;
+
+//import com.hackerrank.test.utility.Order;
+//import com.hackerrank.test.utility.OrderedTestRunner;
+//import com.hackerrank.test.utility.TestWatchman;
+
+import TheCoinMachine.domain.Transaction;
+
+import java.util.List;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+//import com.hackerrank.test.utility.OrderedTestRunner;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
-@RunWith(OrderedTestRunner.class)
-@SpringBootTest
-@AutoConfigureMockMvc
-public class GreetingsControllerTest {
-    @ClassRule
-    public static final SpringClassRule springClassRule = new SpringClassRule();
-
-    @Rule
-    public final SpringMethodRule springMethodRule = new SpringMethodRule();
-
-    @Rule
-    public TestWatcher watchman = TestWatchman.watchman;
-
-    @Autowired
+//@RunWith(OrderedTestRunner.class)
+//@SpringBootTest
+//@AutoConfigureMockMvc
+public class ControllerTest {
     private MockMvc mockMvc;
+    private ObjectMapper objectMapper;
 
-    @BeforeClass
-    public static void setUpClass() {
-        TestWatchman.watchman.registerClass(GreetingsControllerTest.class);
+    @BeforeEach
+    public void setup() {
+        this.mockMvc = standaloneSetup(new CoinController()).build();
+        this.objectMapper = new ObjectMapper();
     }
 
-    @AfterClass
-    public static void tearDownClass() {
-        TestWatchman.watchman.createReport(GreetingsControllerTest.class);
+    private void performPostAndExpect(Transaction transaction, int rightPersonExpected, int leftPersonExpected) throws Exception {
+        mockMvc.perform(post("/coins")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(transaction)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rightPerson").value(rightPersonExpected))
+                .andExpect(jsonPath("$.leftPerson").value(leftPersonExpected));
     }
 
-    /**
-     *
-     * @throws Exception
-     *
-     * It tests response to be "Hello Java!"
-     */
+//    private void performPostAndExpectBadRequest(Transaction transaction) throws Exception {
+//        mockMvc.perform(post("/coins")
+//                .contentType(MediaType.APPLICATION_JSON)
+//                .content(objectMapper.writeValueAsString(transaction)))
+//                .andExpect(status().isBadRequest());
+//    }
+    
     @Test
-    @Order(1)
-    public void greetJava() throws Exception {
-        String response = mockMvc.perform(MockMvcRequestBuilders.get("/Java"))
-            .andExpect(MockMvcResultMatchers.status().isOk())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+    public void testSampleCase() throws Exception {
+        Transaction transaction = new Transaction();
+        transaction.setRightPerson(List.of("P", "P", "R"));
+        transaction.setLeftPerson(List.of("P", "R", "R"));
 
-        Assert.assertEquals(response, "Hello Java!");
+        performPostAndExpect(transaction, 4, 8);
     }
 
-    /**
-     *
-     * @throws Exception
-     *
-     * It tests response to be "Hello Spring!"
-     */
     @Test
-    @Order(2)
-    public void greetSpring() throws Exception {
-        String response = mockMvc.perform(MockMvcRequestBuilders.get("/Spring"))
-            .andExpect(MockMvcResultMatchers.status().isOk())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+    public void testBothShare() throws Exception {
+        Transaction transaction = new Transaction();
+        transaction.setRightPerson(List.of("P", "P", "P"));
+        transaction.setLeftPerson(List.of("P", "P", "P"));
 
-        Assert.assertEquals(response, "Hello Spring!");
+        performPostAndExpect(transaction, 9, 9);
     }
 
-    /**
-     *
-     * @throws Exception
-     *
-     * It tests response to be "Hello RodJohnson!"
-     */
     @Test
-    @Order(3)
-    public void greetRodJohnson() throws Exception {
-        String response = mockMvc.perform(MockMvcRequestBuilders.get("/RodJohnson"))
-            .andExpect(MockMvcResultMatchers.status().isOk())
-            .andReturn()
-            .getResponse()
-            .getContentAsString();
+    public void testBothWait() throws Exception {
+        Transaction transaction = new Transaction();
+        transaction.setRightPerson(List.of("R", "R", "R"));
+        transaction.setLeftPerson(List.of("R", "R", "R"));
 
-        Assert.assertEquals(response, "Hello RodJohnson!");
+        performPostAndExpect(transaction, 3, 3);
     }
+
+    @Test
+    public void testInterleaved() throws Exception {
+        Transaction transaction = new Transaction();
+        transaction.setRightPerson(List.of("P", "R", "P"));
+        transaction.setLeftPerson(List.of("R", "P", "R"));
+
+        performPostAndExpect(transaction, 4, 8);
+    }
+
+//    @Test
+//    public void testInvalidInput() throws Exception {
+//        Transaction transaction = new Transaction();
+//        transaction.setRightPerson(List.of("P", "X", "R"));
+//        transaction.setLeftPerson(List.of("R", "P", "R"));
+//
+//        performPostAndExpectBadRequest(transaction);
+//    }
+//
+//    @Test
+//    public void testDifferentLength() throws Exception {
+//        Transaction transaction = new Transaction();
+//        transaction.setRightPerson(List.of("P", "P"));
+//        transaction.setLeftPerson(List.of("R", "R", "R"));
+//
+//        performPostAndExpectBadRequest(transaction);
+//    }
 }
