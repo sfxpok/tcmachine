@@ -19,8 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-      with: 
-         path: ./TheCoinMachine
+      # with: 
+         # path: ./TheCoinMachine
     - name: Set up JDK 17
       uses: actions/setup-java@v3
       with:
@@ -28,12 +28,12 @@ jobs:
         distribution: 'temurin'
         cache: maven
     
-    - name: Navigate to the project directory
-      run: cd TheCoinMachine
+    # - name: Navigate to the project directory
+      # run: cd TheCoinMachine
         
     - name: Build with Maven
       run: mvn clean install
-      working-directory: ./TheCoinMachine
+      # working-directory: ./TheCoinMachine
 
     # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
     - name: Update dependency graph
