@@ -32,6 +32,7 @@ public class CoinController {
 	            
 	        } else if ("R".equals(moveRight) && "R".equals(moveLeft)) {
 	            continue;
+	            // Ambas as pessoas a receberem não deveria bloquear o programa? Poderia ser interessante implementar trincos.
 	        }
 	    }
 
